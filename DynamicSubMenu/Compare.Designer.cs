@@ -31,12 +31,12 @@
             this.sourceImage = new System.Windows.Forms.PictureBox();
             this.destImage = new System.Windows.Forms.PictureBox();
             this.sourceFile = new System.Windows.Forms.Label();
-            this.lblSizeSource = new System.Windows.Forms.Label();
+            this.sourceSize = new System.Windows.Forms.Label();
             this.sourceCreatedOn = new System.Windows.Forms.Label();
             this.sourceModifiedOn = new System.Windows.Forms.Label();
             this.destModifiedOn = new System.Windows.Forms.Label();
             this.destCreatedOn = new System.Windows.Forms.Label();
-            this.lblSizeDest = new System.Windows.Forms.Label();
+            this.destSize = new System.Windows.Forms.Label();
             this.destFile = new System.Windows.Forms.Label();
             this.overwriteButton = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
@@ -72,14 +72,14 @@
             this.sourceFile.TabIndex = 2;
             this.sourceFile.Text = "Source File";
             // 
-            // lblSizeSource
+            // sourceSize
             // 
-            this.lblSizeSource.AutoSize = true;
-            this.lblSizeSource.Location = new System.Drawing.Point(3, 417);
-            this.lblSizeSource.Name = "lblSizeSource";
-            this.lblSizeSource.Size = new System.Drawing.Size(115, 13);
-            this.lblSizeSource.TabIndex = 3;
-            this.lblSizeSource.Text = "00 Kb [ width x height ]";
+            this.sourceSize.AutoSize = true;
+            this.sourceSize.Location = new System.Drawing.Point(3, 417);
+            this.sourceSize.Name = "sourceSize";
+            this.sourceSize.Size = new System.Drawing.Size(115, 13);
+            this.sourceSize.TabIndex = 3;
+            this.sourceSize.Text = "00 Kb [ width x height ]";
             // 
             // sourceCreatedOn
             // 
@@ -102,7 +102,7 @@
             // destModifiedOn
             // 
             this.destModifiedOn.AutoSize = true;
-            this.destModifiedOn.Location = new System.Drawing.Point(418, 450);
+            this.destModifiedOn.Location = new System.Drawing.Point(411, 450);
             this.destModifiedOn.Name = "destModifiedOn";
             this.destModifiedOn.Size = new System.Drawing.Size(64, 13);
             this.destModifiedOn.TabIndex = 9;
@@ -117,14 +117,14 @@
             this.destCreatedOn.TabIndex = 8;
             this.destCreatedOn.Text = "Created On";
             // 
-            // lblSizeDest
+            // destSize
             // 
-            this.lblSizeDest.AutoSize = true;
-            this.lblSizeDest.Location = new System.Drawing.Point(411, 417);
-            this.lblSizeDest.Name = "lblSizeDest";
-            this.lblSizeDest.Size = new System.Drawing.Size(115, 13);
-            this.lblSizeDest.TabIndex = 7;
-            this.lblSizeDest.Text = "00 Kb [ width x height ]";
+            this.destSize.AutoSize = true;
+            this.destSize.Location = new System.Drawing.Point(411, 417);
+            this.destSize.Name = "destSize";
+            this.destSize.Size = new System.Drawing.Size(115, 13);
+            this.destSize.TabIndex = 7;
+            this.destSize.Text = "00 Kb [ width x height ]";
             // 
             // destFile
             // 
@@ -154,6 +154,7 @@
             this.button1.TabIndex = 11;
             this.button1.Text = "&Skip";
             this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click_1);
             // 
             // btnRename
             // 
@@ -163,6 +164,7 @@
             this.btnRename.TabIndex = 12;
             this.btnRename.Text = "&Rename";
             this.btnRename.UseVisualStyleBackColor = true;
+            this.btnRename.Click += new System.EventHandler(this.btnRename_Click);
             // 
             // newName
             // 
@@ -183,11 +185,11 @@
             this.Controls.Add(this.overwriteButton);
             this.Controls.Add(this.destModifiedOn);
             this.Controls.Add(this.destCreatedOn);
-            this.Controls.Add(this.lblSizeDest);
+            this.Controls.Add(this.destSize);
             this.Controls.Add(this.destFile);
             this.Controls.Add(this.sourceModifiedOn);
             this.Controls.Add(this.sourceCreatedOn);
-            this.Controls.Add(this.lblSizeSource);
+            this.Controls.Add(this.sourceSize);
             this.Controls.Add(this.sourceFile);
             this.Controls.Add(this.destImage);
             this.Controls.Add(this.sourceImage);
@@ -205,12 +207,12 @@
         private System.Windows.Forms.PictureBox sourceImage;
         private System.Windows.Forms.PictureBox destImage;
         private System.Windows.Forms.Label sourceFile;
-        private System.Windows.Forms.Label lblSizeSource;
+        private System.Windows.Forms.Label sourceSize;
         private System.Windows.Forms.Label sourceCreatedOn;
         private System.Windows.Forms.Label sourceModifiedOn;
         private System.Windows.Forms.Label destModifiedOn;
         private System.Windows.Forms.Label destCreatedOn;
-        private System.Windows.Forms.Label lblSizeDest;
+        private System.Windows.Forms.Label destSize;
         private System.Windows.Forms.Label destFile;
         private System.Windows.Forms.Button overwriteButton;
         private System.Windows.Forms.Button button1;

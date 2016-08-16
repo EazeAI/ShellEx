@@ -25,6 +25,7 @@ namespace DynamicSubMenus
     {
         private string anchorPath = null;
         private string destPath = null;
+        private Config config = null;
 
         //  lets create the menu strip.
         private ContextMenuStrip menu = new ContextMenuStrip();
@@ -59,7 +60,8 @@ namespace DynamicSubMenus
         // </returns>
         protected override ContextMenuStrip CreateMenu()
         {
-            InitConfig();
+            config = new Config();
+            config.InitConfig();
 
             menu.Items.Clear();
             FileAttributes attr = File.GetAttributes(SelectedItemPaths.First());
@@ -88,84 +90,6 @@ namespace DynamicSubMenus
             menu = CreateMenu();
         }
 
-        protected Hashtable config = new Hashtable();
-        protected string configPath = @"c:\cnf\menu.conf";
-
-        protected void InitConfig()
-        {
-            MessageBox.Show("Init config");
-            if (!ReadConfig())
-            {
-                MessageBox.Show("Read failed");
-                config.Add("anchor", "");
-                config.Add("dest", "");
-            }
-            ShowConfig();
-
-        }
-
-        protected void ShowConfig()
-        {
-            StringBuilder builder = new StringBuilder();
-            foreach (DictionaryEntry de in config)
-            {
-                builder.AppendLine("Key="+de.Key + "==:==Value=" + de.Value);
-            }
-            MessageBox.Show("Config content...\r\n" + builder.ToString());
-        }
-
-        protected void SaveConfig()
-        {
-            try
-            {
-                List<string> items = new List<string>();
-                StringBuilder builder = new StringBuilder();
-                foreach (DictionaryEntry de in config)
-                {
-                    items.Add(de.Key + "?" + de.Value);
-                    builder.AppendLine(de.Key + "?" + de.Value);
-                }
-                MessageBox.Show("Save" + builder.ToString());
-                System.IO.File.WriteAllLines(configPath, items.ToArray());
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-            }
-        
-        }
-
-        protected bool ReadConfig()
-        {
-            try
-            {
-                StringBuilder builder = new StringBuilder();
-                string text = System.IO.File.ReadAllText(configPath);
-                string[] lines = System.IO.File.ReadAllLines(configPath);
-                builder.AppendLine("Read config as >>> " + text );
-
-                foreach (string line in lines)
-                {
-                    
-                    builder.AppendLine("Line: " + line);
-                    config.Clear();
-                    string[] items = line.Split(new char[]{'?'});
-
-                    if(items.Length > 0)
-                    {
-                        config.Add(items[0], items[1]);
-                    }
-                    builder.AppendLine(items[0] + ">>>" + items[1]);
-                }
-                MessageBox.Show(builder.ToString());
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-                return false;
-            }
-            return true;
-        }
 
         // <summary>
         // Creates the context menu when the selected item is of file type.
@@ -178,7 +102,7 @@ namespace DynamicSubMenus
 
             anchorMenu = new ToolStripMenuItem 
             {
-                Text = "Anchor",
+                Text = "Source Anchor",
                 Image = Properties.Resources.file_icon
             };
             anchorMenu.Click += AnchorItem;
@@ -204,7 +128,7 @@ namespace DynamicSubMenus
                 Image = Properties.Resources.file_icon
             };
 
-            BuildMenu(copyMenu, moveMenu, @"D:\tests\dest");
+            BuildMenu(copyMenu, moveMenu, config.Set["dest"].ToString());
 
             menu.Items.Clear();
             menu.Items.Add(seperatorMenu);
@@ -292,7 +216,7 @@ namespace DynamicSubMenus
                 mnuAddFolder.Tag = "NEW::" + dir;
                 moveMenu.DropDownItems.Add(mnuAddFolder);
 
-                ToolStripMenuItem mnuCopyFile = new ToolStripMenuItem("Copy");
+                ToolStripMenuItem mnuCopyFile = new ToolStripMenuItem("Move");
                 mnuCopyFile.Click += MenuSelected;
                 mnuCopyFile.Tag = "MOVE::" + dir;
                 moveMenu.DropDownItems.Add(mnuCopyFile);
@@ -311,9 +235,9 @@ namespace DynamicSubMenus
                     copyMenu.DropDownItems.Add(mnuCopy);
 
                     ToolStripMenuItem mnuMove = new ToolStripMenuItem(d.Substring(d.LastIndexOf("\\") + 1));
-                    mnuCopy.Click += MenuSelected;
-                    mnuCopy.Tag = "DIR::" + d;
-                    moveMenu.DropDownItems.Add(mnuCopy);
+                    mnuMove.Click += MenuSelected;
+                    mnuMove.Tag = "DIR::" + d;
+                    moveMenu.DropDownItems.Add(mnuMove);
 
                     BuildMenu(mnuCopy, mnuMove, d);
                 }
@@ -326,18 +250,18 @@ namespace DynamicSubMenus
 
         private void AnchorItem(object sender, EventArgs e)
         {
-            config["anchor"] = SelectedItemPaths.ToList()[0].ToString();
-            MessageBox.Show("Anchor set to " + config["anchor"]);
-            ShowConfig();
-            SaveConfig();
+            config.Set["anchor"] = Path.GetDirectoryName(SelectedItemPaths.ToList()[0].ToString());
+            MessageBox.Show("Anchor set to " + config.Set["anchor"]);
+            config.ShowConfig();
+            config.SaveConfig();
         }
 
         private void DestItem(object sender, EventArgs e)
         {
-            config["dest"] = SelectedItemPaths.ToList()[0].ToString();
-            MessageBox.Show("Dest fixed to " + config["dest"]);
-            ShowConfig();
-            SaveConfig();
+            config.Set["dest"] = Path.GetDirectoryName(SelectedItemPaths.ToList()[0].ToString());
+            MessageBox.Show("Dest fixed to " + config.Set["dest"]);
+            config.ShowConfig();
+            config.SaveConfig();
         }
 
         // <summary>
@@ -358,46 +282,34 @@ namespace DynamicSubMenus
 
         private void MenuSelected(object sender, EventArgs e)
         {
-            if (String.IsNullOrEmpty(this.anchorPath))
-                MessageBox.Show("Location anchor is not fixed");
-            else if (String.IsNullOrEmpty(this.destPath))
-                MessageBox.Show("Destination is not fixed");
-            else
-            {
-                ToolStripMenuItem sndr = (ToolStripMenuItem)sender;
-                string souceDir = Directory.GetCurrentDirectory();
-                string action = sndr.Tag.ToString().Split(new String[] { "::" }, StringSplitOptions.RemoveEmptyEntries)[0];
-                string destDir = sndr.Tag.ToString();
-                PerformAction(SelectedItemPaths, souceDir, destDir, action);
-            }
-        }
-
-        protected void PerformAction(IEnumerable<string> items, string source, string dest, string action)
-        {
-            //  Builder for the output.
+            MessageBox.Show("menu selected: " + ((ToolStripMenuItem)sender).Tag.ToString());
             var builder = new StringBuilder();
-
-            //  Go through each file.
-            foreach (var filePath in SelectedItemPaths)
+            foreach (string filePath in SelectedItemPaths)
             {
-                //ToDO move logic here
-                //   compile source and dest complete file paths
-                //   check directories and files
-                //   file exists show diffeent form
-                //   get new name on rename
-                //   move file to dest
-
-
-                builder.AppendLine(string.Format("{0}", Path.GetFileName(filePath)));
+                builder.AppendLine(string.Format("{0}", filePath));
             }
-            builder.AppendLine(action + " >>> " + source + " to " + dest);
-
-            //  Show the ouput.
             MessageBox.Show(builder.ToString());
 
-            CompareForm form = new CompareForm();
-            form.Show();
+            CmdModule cmd = new CmdModule();
+            cmd.InitCmd(((ToolStripMenuItem)sender).Tag.ToString(), SelectedItemPaths);
+
+        //    if (String.IsNullOrEmpty(config.Set["src"].ToString()))
+        //        MessageBox.Show("Source anchor is not fixed");
+        //    else if (String.IsNullOrEmpty(config.Set["dest"].ToString()))
+        //        MessageBox.Show("Destination is not fixed");
+        //    else
+        //    {
+                
+        //        ToolStripMenuItem sndr = (ToolStripMenuItem)sender;
+        //        string souceDir = Directory.GetCurrentDirectory();
+        //        string action = sndr.Tag.ToString().Split(new String[] { "$" }, StringSplitOptions.RemoveEmptyEntries)[0];
+        //        string destDir = sndr.Tag.ToString().Split(new String[] { "$" }, StringSplitOptions.RemoveEmptyEntries)[1];
+        //        MessageBox.Show(String.Format("Performing %s to %s", action, destDir));
+        //        PerformAction(SelectedItemPaths, souceDir, destDir, action);
+        //    }
         }
+
+
     }
 
     enum Action
