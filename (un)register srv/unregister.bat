@@ -36,6 +36,14 @@ if %SysOS%==32BIT (
 ) else (
 "%windir%\Microsoft.NET\Framework64\v4.0.30319\regasm.exe" /u %cd%\DynamicSubMenus.dll )
 
+ECHO Restart explorer
+
+taskkill /f /IM explorer.exe
+
+Start explorer.exe
+
+explorer.exe .
+
 :END
 
 PAUSE
