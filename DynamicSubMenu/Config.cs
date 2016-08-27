@@ -29,6 +29,8 @@ namespace DynamicSubMenus
                 //MessageBox.Show("Read failed");
                 config.Add("anchor", "");
                 config.Add("dest", "");
+                config.Add("fPreserve", "true");
+                //config.Add("recent", q.ToConfig());
             }
             ShowConfig();
 

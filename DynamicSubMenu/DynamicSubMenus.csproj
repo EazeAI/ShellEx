@@ -68,6 +68,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="q.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="key.snk" />

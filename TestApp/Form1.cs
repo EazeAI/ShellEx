@@ -26,7 +26,7 @@ namespace TestApp
                   @"C:\dump\gras\pzy-i-11-DSCxxxxx\pzy.be\i\x\IMG_1928.jpg"
             };
 
-            cmd.InitCmd(@"NEW::C:\wspace\test\dest", files);
+            cmd.InitCmd(@"NOPE::MOVE::C:\wspace\test\dest", files);
         }
 
         private void btnInit_Click(object sender, EventArgs e)

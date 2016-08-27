@@ -128,6 +128,7 @@ namespace DynamicSubMenus
                 Image = Properties.Resources.file_icon
             };
 
+            BuildRecent(copyMenu, moveMenu);
             BuildMenu(copyMenu, moveMenu, config.Set["dest"].ToString());
 
             menu.Items.Clear();
@@ -191,18 +192,58 @@ namespace DynamicSubMenus
         //    menu.Items.Add(moveMenu);
         //}
 
+
+        protected void BuildRecent(ToolStripMenuItem copyMenu, ToolStripMenuItem moveMenu)
+        {
+            RecentStack.Read();
+            foreach (LastItem item in RecentStack.Items)
+            {
+                string dispItem = GetDispItem(item);
+
+                ToolStripMenuItem mnuRecentCopy = new ToolStripMenuItem(dispItem);
+                mnuRecentCopy.Click += MenuSelected;
+                mnuRecentCopy.Tag = "RECENT::COPY::" + item.path;
+                copyMenu.DropDownItems.Add(mnuRecentCopy);
+
+                ToolStripMenuItem mnuRecentMove = new ToolStripMenuItem(dispItem);
+                mnuRecentMove.Click += MenuSelected;
+                mnuRecentMove.Tag = "RECENT::MOVE::" + item.path;
+                moveMenu.DropDownItems.Add(mnuRecentCopy);
+
+            }
+
+            ToolStripSeparator seperatorMenu1 = new ToolStripSeparator();
+            copyMenu.DropDownItems.Add(seperatorMenu1);
+
+            ToolStripSeparator seperatorMenu2 = new ToolStripSeparator();
+            copyMenu.DropDownItems.Add(seperatorMenu2);
+        }
+
+        public string GetDispItem(LastItem item)
+        {
+            string thisPath = item.path.Replace(config.Set["dest"].ToString(), "");
+            string[] segs = thisPath.Split(new char[] { '\\' });
+            string rVal = string.Empty;
+
+            for (int i = 0; i < segs.Length; i++)
+            {
+                rVal = rVal + segs[i] + ">";
+            }
+            return rVal;
+
+        }
         protected void BuildMenu(ToolStripMenuItem copyMenu, ToolStripMenuItem moveMenu, String dir)
         {
             if (copyMenu.DropDownItems.Count == 0)
             {
                 ToolStripMenuItem mnuAddFolder = new ToolStripMenuItem("New Folder");
                 mnuAddFolder.Click += MenuSelected;
-                mnuAddFolder.Tag = "NEW::" + dir;
+                mnuAddFolder.Tag = "NEW::COPY::" + dir;
                 copyMenu.DropDownItems.Add(mnuAddFolder);
 
                 ToolStripMenuItem mnuCopyFile = new ToolStripMenuItem("Copy");
                 mnuCopyFile.Click += MenuSelected;
-                mnuCopyFile.Tag = "COPY::" + dir;
+                mnuCopyFile.Tag = "NOPE::COPY::" + dir;
                 copyMenu.DropDownItems.Add(mnuCopyFile);
 
                 ToolStripSeparator seperatorMenu = new ToolStripSeparator();
@@ -213,12 +254,12 @@ namespace DynamicSubMenus
             {
                 ToolStripMenuItem mnuAddFolder = new ToolStripMenuItem("New Folder");
                 mnuAddFolder.Click += MenuSelected;
-                mnuAddFolder.Tag = "NEW::" + dir;
+                mnuAddFolder.Tag = "NEW::MOVE::" + dir;
                 moveMenu.DropDownItems.Add(mnuAddFolder);
 
                 ToolStripMenuItem mnuCopyFile = new ToolStripMenuItem("Move");
                 mnuCopyFile.Click += MenuSelected;
-                mnuCopyFile.Tag = "MOVE::" + dir;
+                mnuCopyFile.Tag = "NOPE::MOVE::" + dir;
                 moveMenu.DropDownItems.Add(mnuCopyFile);
 
                 ToolStripSeparator seperatorMenu = new ToolStripSeparator();
@@ -282,13 +323,13 @@ namespace DynamicSubMenus
 
         private void MenuSelected(object sender, EventArgs e)
         {
-            MessageBox.Show("menu selected: " + ((ToolStripMenuItem)sender).Tag.ToString());
-            var builder = new StringBuilder();
-            foreach (string filePath in SelectedItemPaths)
-            {
-                builder.AppendLine(string.Format("{0}", filePath));
-            }
-            MessageBox.Show(builder.ToString());
+            //MessageBox.Show("menu selected: " + ((ToolStripMenuItem)sender).Tag.ToString());
+            //var builder = new StringBuilder();
+            //foreach (string filePath in SelectedItemPaths)
+            //{
+            //    builder.AppendLine(string.Format("{0}", filePath));
+            //}
+            //MessageBox.Show(builder.ToString());
 
             CmdModule cmd = new CmdModule();
             cmd.InitCmd(((ToolStripMenuItem)sender).Tag.ToString(), SelectedItemPaths);
