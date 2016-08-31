@@ -16,7 +16,9 @@ namespace DynamicSubMenus
         {
             try
             {
-                MessageBox.Show("Command Init: " + tag);
+                MessageCache.Instance().Add(DateTime.Now.ToString());
+                MessageCache.Instance().Add("Command Init: " + tag);
+
                 config.InitConfig();
 
                 if (String.IsNullOrEmpty(config.Set["anchor"].ToString()))
@@ -31,8 +33,12 @@ namespace DynamicSubMenus
                     string action1 = tag.Split(new String[] { "::" }, StringSplitOptions.RemoveEmptyEntries)[0];
                     string action2 = tag.Split(new String[] { "::" }, StringSplitOptions.RemoveEmptyEntries)[1];
                     string destDir = tag.Split(new String[] { "::" }, StringSplitOptions.RemoveEmptyEntries)[2];
-                    //MessageBox.Show(String.Format("Performing {0}:{1} to {2}", action1, action2, destDir));
+
                     PerformAction(files, destDir, action1, action2);
+
+                    MessageCache.Instance().Add("Process completed at " + DateTime.Now.ToString());
+                    MessageCache.Instance().Add("  ");
+                    MessageCache.Instance().Show("Done :: " + tag);
                 }
             }
             catch (Exception ex)
@@ -43,100 +49,125 @@ namespace DynamicSubMenus
 
         protected void PerformAction(IEnumerable<string> files, string dest, string action1, string action2)
         {
-            if (action1 == "NEW")
+            try
             {
-                string folderName = Prompt.ShowDialog("Directory Name:", "New Directory");
-                dest = Path.Combine(dest, folderName);
-                Directory.CreateDirectory(dest);
-                //return;
-                // Do not return let it process the second part of the action (action2)
-            }
-
-            //  Builder for the output.
-            var builder = new StringBuilder();
-            int count = 0;
-
-            //  Go through each file.
-            foreach (var filePath in files)
-            {
-                //ToDO move logic here
-                //   compile source and dest complete file paths
-                //   check directories and files
-                //   file exists show diffeent form
-                //   get new name on rename
-                //   move file to dest
-
-                // donot include blog directory
-                //string tail = filePath.Replace(config.Set["anchor"].ToString(), "");
-                //tail = tail.Replace(Enclose(tail, @"\", @"\"), "");
-                //string newPath = dest + @"\" + tail;
-
-
-                //include blog directory
-                string newPath = dest + filePath.Replace(config.Set["anchor"].ToString(), "");
-
-                //int endOfBase = newPath.IndexOf(dest, 0) + 1;
-                //string exclusionPart = newPath.Substring(endOfBase, newPath.IndexOf('/', endOfBase));
-                //newPath = newPath.Replace(exclusionPart, "");
-
-                if (File.Exists(newPath))
+                if (action1 == "NEW")
                 {
-                    string uniquePath = FileModule.GetUniqueFileName(newPath);
-                    comparer.Show(filePath, newPath, uniquePath);
-                    string choice = comparer.Choice;
-                    switch (choice)
+                    string folderName = Prompt.ShowDialog("Directory Name:", "New Directory");
+                    dest = Path.Combine(dest, folderName);
+                    Directory.CreateDirectory(dest);
+                    MessageCache.Instance().Add("Folder created: " + dest);
+                }
+
+                if (action2 == "NOPE")
+                    return;
+
+                MessageCache.Instance().Add("Processing Files...");
+                MessageCache.Instance().Add("--------------------");
+                //  Builder for the output.
+                var builder = new StringBuilder();
+                int count = 0;
+
+                //int b4Count = Directory.GetFiles(dest).Length;
+
+                //  Go through each file.
+                foreach (var filePath in files)
+                {
+                    // donot include blog directory
+                    //string tail = filePath.Replace(config.Set["anchor"].ToString(), "");
+                    //tail = tail.Replace(Enclose(tail, @"\", @"\"), "");
+                    //string newPath = dest + @"\" + tail;
+
+
+                    //include blog directory
+                    string newPath = dest + filePath.Replace(config.Set["anchor"].ToString(), "");
+
+                    //int endOfBase = newPath.IndexOf(dest, 0) + 1;
+                    //string exclusionPart = newPath.Substring(endOfBase, newPath.IndexOf('/', endOfBase));
+                    //newPath = newPath.Replace(exclusionPart, "");
+
+                    if (File.Exists(newPath))
                     {
-                        case "skip":
-                            break;
+                        string uniquePath = FileModule.GetUniqueFileName(newPath);
+                        comparer.Show(filePath, newPath, uniquePath);
+                        string choice = comparer.Choice;
+                        switch (choice)
+                        {
+                            case "skip":
+                                MessageCache.Instance().Add(filePath + " skipped");
+                                break;
 
-                        case "write":
-                            DoAction(filePath, newPath, action2);
-                            count++;
-                            break;
+                            case "write":
+                                DoAction(filePath, newPath, action2);
+                                //MessageCache.Instance().Add(filePath + " overwrite");
+                                //count++;
+                                break;
 
-                        case "rename":
-                            DoAction(filePath, uniquePath, action2);
-                            count++;
-                            break;
+                            case "rename":
+                                DoAction(filePath, uniquePath, action2);
+                                //MessageCache.Instance().Add(filePath + " rename");
+                                count++;
+                                break;
 
+                        }
                     }
-                }
-                else
-                {
-                    DoAction(filePath, newPath, action2);
-                    count++;
+                    else
+                    {
+                        DoAction(filePath, newPath, action2);
+                        //MessageCache.Instance().Add(filePath + " write");
+                        count++;
+                    }
+
+                    //MessageCache.Instance().Add(String.Format("{0}: {1} > {2}", action2, filePath, newPath));
+
+
                 }
 
-                //MessageBox.Show(String.Format("%s: %s > %s", action, filePath, newPath));
-                //RecentStack.Items.Push(new LastItem("", Path.GetDirectoryName(dest)));
                 RecentStack.Add(new LastItem("", dest));
                 RecentStack.Save();
 
-                //builder.AppendLine(string.Format("{0}", Path.GetFileName(filePath)));
+                MessageCache.Instance().Add(String.Format("{0} >>> {1} file(s) to {2}", action2, count, dest));
+
+                //int aftCount = Directory.GetFiles(dest).Length;
+                //MessageCache.Instance().Add(String.Format("File verification: {0} + {1} = {2} is ({3})", b4Count, count, aftCount, 
+                //    (b4Count+count == aftCount).ToString()));
             }
-            builder.AppendLine(String.Format("{0} >>> {1} file(s) to {2}", action2, count, dest));
-            
-            //  Show the ouput.
-            MessageBox.Show(builder.ToString());
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.StackTrace);
+            }
         }
 
         protected void DoAction(string source, string dest, string action)
         {
             FileModule.EnsureFilePath(dest);
+            string status = string.Empty;
             switch (action)
             { 
                 case "COPY":
                     File.Copy(source, dest, true);
+
+                    if (File.Exists(dest))
+                    {
+                        //File.Delete(source);
+                        status = "OK";
+                    }
                     break;
 
                 case "MOVE":
-                    File.Move(source, dest);
+                    File.Copy(source, dest, true);
+                    //File.Move(source, dest);
+                    
+                    if (File.Exists(dest))
+                    {
+                        File.Delete(source);
+                        status = "OK";
+                    }
+
                     break;
             }
-
-
-
             //MessageBox.Show(String.Format("{0}: {1} > {2}", action, source, dest));
+            MessageCache.Instance().Add(String.Format("{0}: {1} > {2} [{3}]", action, source, dest, status));
         }
 
         protected string Enclose(string str, string from, string to)

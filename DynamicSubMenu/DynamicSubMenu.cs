@@ -137,61 +137,11 @@ namespace DynamicSubMenus
             menu.Items.Add(anchorMenu);
             menu.Items.Add(destMenu);
 
-            menu.Items.Add(copyMenu);
             menu.Items.Add(moveMenu);
+            menu.Items.Add(copyMenu);
 
             menu.Items.Add(seperatorMenu);
         }
-
-        // <summary>
-        // Creates the context menu when the selected item is a folder.
-        // </summary>
-        //protected void MenuDirectory()
-        //{
-        //    ToolStripMenuItem moveMenu;
-        //    moveMenu = new ToolStripMenuItem
-        //    {
-        //        Text = "Move Files...",
-        //        Image = Properties.Resources.Folder_icon
-        //    };
-
-        //    ToolStripMenuItem copyMenu;
-        //    copyMenu = new ToolStripMenuItem
-        //    {
-        //        Text = "Copy Files...",
-        //        Image = Properties.Resources.Folder_icon
-        //    };
-        //            ToolStripMenuItem SubMenu1;
-        //            SubMenu1 = new ToolStripMenuItem
-        //            {
-        //                Text = "DirSubMenu1",
-        //                Image = Properties.Resources.Folder_icon
-        //            };
-
-        //            var SubMenu2 = new ToolStripMenuItem
-        //            {
-        //                Text = "DirSubMenu2",
-        //                Image = Properties.Resources.Folder_icon
-        //            };
-        //            SubMenu2.DropDownItems.Clear();
-        //            SubMenu2.Click += ShowItemName;
-
-        //                    var SubSubMenu1 = new ToolStripMenuItem
-        //                    {
-        //                        Text = "DirSubSubMenu1",
-        //                        Image = Properties.Resources.Folder_icon
-        //                    };
-        //                    SubSubMenu1.Click += ShowItemName;
-
-        //    // Lets attach the submenus to the main menu
-        //    SubMenu1.DropDownItems.Add(SubSubMenu1);
-        //    moveMenu.DropDownItems.Add(SubMenu1);
-        //    moveMenu.DropDownItems.Add(SubMenu2);
-
-        //    menu.Items.Clear();
-        //    menu.Items.Add(moveMenu);
-        //}
-
 
         protected void BuildRecent(ToolStripMenuItem copyMenu, ToolStripMenuItem moveMenu)
         {
@@ -200,20 +150,19 @@ namespace DynamicSubMenus
             {
                 string dispItem = GetDispItem(item);
 
+                ToolStripMenuItem mnuRecentMove = new ToolStripMenuItem(dispItem);
+                mnuRecentMove.Click += MenuSelected;
+                mnuRecentMove.Tag = "RECENT::MOVE::" + item.path;
+                moveMenu.DropDownItems.Add(mnuRecentMove); 
+                
                 ToolStripMenuItem mnuRecentCopy = new ToolStripMenuItem(dispItem);
                 mnuRecentCopy.Click += MenuSelected;
                 mnuRecentCopy.Tag = "RECENT::COPY::" + item.path;
                 copyMenu.DropDownItems.Add(mnuRecentCopy);
-
-                ToolStripMenuItem mnuRecentMove = new ToolStripMenuItem(dispItem);
-                mnuRecentMove.Click += MenuSelected;
-                mnuRecentMove.Tag = "RECENT::MOVE::" + item.path;
-                moveMenu.DropDownItems.Add(mnuRecentCopy);
-
             }
 
             ToolStripSeparator seperatorMenu1 = new ToolStripSeparator();
-            copyMenu.DropDownItems.Add(seperatorMenu1);
+            moveMenu.DropDownItems.Add(seperatorMenu1);
 
             ToolStripSeparator seperatorMenu2 = new ToolStripSeparator();
             copyMenu.DropDownItems.Add(seperatorMenu2);
@@ -234,9 +183,35 @@ namespace DynamicSubMenus
         }
         protected void BuildMenu(ToolStripMenuItem copyMenu, ToolStripMenuItem moveMenu, String dir)
         {
+            if (moveMenu.DropDownItems.Count == 0)
+            {
+                ToolStripMenuItem mnuNewFolder = new ToolStripMenuItem("New");
+                mnuNewFolder.Click += MenuSelected;
+                mnuNewFolder.Tag = "NEW::NOPE::" + dir;
+                moveMenu.DropDownItems.Add(mnuNewFolder);
+
+                ToolStripMenuItem mnuAddFolder = new ToolStripMenuItem("New + Move");
+                mnuAddFolder.Click += MenuSelected;
+                mnuAddFolder.Tag = "NEW::MOVE::" + dir;
+                moveMenu.DropDownItems.Add(mnuAddFolder);
+
+                ToolStripMenuItem mnuCopyFile = new ToolStripMenuItem("Move");
+                mnuCopyFile.Click += MenuSelected;
+                mnuCopyFile.Tag = "NOPE::MOVE::" + dir;
+                moveMenu.DropDownItems.Add(mnuCopyFile);
+
+                ToolStripSeparator seperatorMenu = new ToolStripSeparator();
+                moveMenu.DropDownItems.Add(seperatorMenu);
+            } 
+            
             if (copyMenu.DropDownItems.Count == 0)
             {
-                ToolStripMenuItem mnuAddFolder = new ToolStripMenuItem("New Folder");
+                ToolStripMenuItem mnuNewFolder = new ToolStripMenuItem("New");
+                mnuNewFolder.Click += MenuSelected;
+                mnuNewFolder.Tag = "NEW::NOPE::" + dir;
+                copyMenu.DropDownItems.Add(mnuNewFolder);
+
+                ToolStripMenuItem mnuAddFolder = new ToolStripMenuItem("New + Copy");
                 mnuAddFolder.Click += MenuSelected;
                 mnuAddFolder.Tag = "NEW::COPY::" + dir;
                 copyMenu.DropDownItems.Add(mnuAddFolder);
@@ -250,35 +225,19 @@ namespace DynamicSubMenus
                 copyMenu.DropDownItems.Add(seperatorMenu);
             }
 
-            if (moveMenu.DropDownItems.Count == 0)
-            {
-                ToolStripMenuItem mnuAddFolder = new ToolStripMenuItem("New Folder");
-                mnuAddFolder.Click += MenuSelected;
-                mnuAddFolder.Tag = "NEW::MOVE::" + dir;
-                moveMenu.DropDownItems.Add(mnuAddFolder);
-
-                ToolStripMenuItem mnuCopyFile = new ToolStripMenuItem("Move");
-                mnuCopyFile.Click += MenuSelected;
-                mnuCopyFile.Tag = "NOPE::MOVE::" + dir;
-                moveMenu.DropDownItems.Add(mnuCopyFile);
-
-                ToolStripSeparator seperatorMenu = new ToolStripSeparator();
-                moveMenu.DropDownItems.Add(seperatorMenu);
-            }
-
             try
             {
                 foreach (string d in Directory.GetDirectories(dir))
                 {
+                    ToolStripMenuItem mnuMove = new ToolStripMenuItem(d.Substring(d.LastIndexOf("\\") + 1));
+                    mnuMove.Click += MenuSelected;
+                    mnuMove.Tag = "DIR::" + d;
+                    moveMenu.DropDownItems.Add(mnuMove); 
+                    
                     ToolStripMenuItem mnuCopy = new ToolStripMenuItem(d.Substring(d.LastIndexOf("\\") + 1));
                     mnuCopy.Click += MenuSelected;
                     mnuCopy.Tag = "DIR::" + d;
                     copyMenu.DropDownItems.Add(mnuCopy);
-
-                    ToolStripMenuItem mnuMove = new ToolStripMenuItem(d.Substring(d.LastIndexOf("\\") + 1));
-                    mnuMove.Click += MenuSelected;
-                    mnuMove.Tag = "DIR::" + d;
-                    moveMenu.DropDownItems.Add(mnuMove);
 
                     BuildMenu(mnuCopy, mnuMove, d);
                 }
@@ -305,52 +264,11 @@ namespace DynamicSubMenus
             config.SaveConfig();
         }
 
-        // <summary>
-        // Shows name of selected files.
-        // </summary>
-        //private void MenuSelected(object sender, EventArgs e)
-        //{
-        //    if (String.IsNullOrEmpty(this.anchorPath))
-        //        MessageBox.Show("Location anchor is not fixed");
-        //    else
-        //    {
-        //        ToolStripMenuItem sndr = (ToolStripMenuItem)sender;
-        //        string souceDir = Directory.GetCurrentDirectory();
-        //        string destDir = sndr.Tag.ToString();
-        //        PerformAction(SelectedItemPaths, souceDir, destDir, Action.Copy);
-        //    }
-        //}
-
         private void MenuSelected(object sender, EventArgs e)
         {
-            //MessageBox.Show("menu selected: " + ((ToolStripMenuItem)sender).Tag.ToString());
-            //var builder = new StringBuilder();
-            //foreach (string filePath in SelectedItemPaths)
-            //{
-            //    builder.AppendLine(string.Format("{0}", filePath));
-            //}
-            //MessageBox.Show(builder.ToString());
-
             CmdModule cmd = new CmdModule();
             cmd.InitCmd(((ToolStripMenuItem)sender).Tag.ToString(), SelectedItemPaths);
-
-        //    if (String.IsNullOrEmpty(config.Set["src"].ToString()))
-        //        MessageBox.Show("Source anchor is not fixed");
-        //    else if (String.IsNullOrEmpty(config.Set["dest"].ToString()))
-        //        MessageBox.Show("Destination is not fixed");
-        //    else
-        //    {
-                
-        //        ToolStripMenuItem sndr = (ToolStripMenuItem)sender;
-        //        string souceDir = Directory.GetCurrentDirectory();
-        //        string action = sndr.Tag.ToString().Split(new String[] { "$" }, StringSplitOptions.RemoveEmptyEntries)[0];
-        //        string destDir = sndr.Tag.ToString().Split(new String[] { "$" }, StringSplitOptions.RemoveEmptyEntries)[1];
-        //        MessageBox.Show(String.Format("Performing %s to %s", action, destDir));
-        //        PerformAction(SelectedItemPaths, souceDir, destDir, action);
-        //    }
         }
-
-
     }
 
     enum Action
